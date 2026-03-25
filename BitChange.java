@@ -1,71 +1,73 @@
-import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class BitChange {
+    private static final byte[] MAGIC = "BITCHANGE".getBytes(StandardCharsets.UTF_8);
 
-    private int a = 0;
-    private int r = 0;
-    private int g = 0;
-    private int b = 0;
-    private int width = 0;
-    private int height = 0;
-    private int i = 0;
+    public static File encode(File original, String message) throws IOException {
+        byte[] content = readAllBytes(original);
+        byte[] msgBytes = message.getBytes(StandardCharsets.UTF_8);
 
-    public void test(BufferedImage image, int[] binaryArray) throws IOException {
-        System.out.println(binaryArray.length);
-        width = image.getWidth();
-        height = image.getHeight();
+        ByteBuffer buffer = ByteBuffer.allocate(content.length + MAGIC.length + 4 + msgBytes.length);
+        buffer.put(content);
+        buffer.put(MAGIC);
+        buffer.putInt(msgBytes.length);
+        buffer.put(msgBytes);
 
-        for (int y = 0; y < height; y++) {
-            if(i >= binaryArray.length){
-                    break;
+        String origName = original.getAbsolutePath();
+        System.out.print("Enter new file name (without the extension or path): ");
+        Scanner S = new Scanner(System.in);
+        String outName = origName.substring(0, origName.lastIndexOf(File.separator) + 1) + S.nextLine() + origName.substring(origName.lastIndexOf('.'));
+        File output = new File(outName);
+
+        try (FileOutputStream fos = new FileOutputStream(output, false)) {
+            fos.write(buffer.array());
+            fos.flush();
+        }
+
+        return output;
+    }
+
+    public static String decode(File file) throws IOException {
+        byte[] content = readAllBytes(file);
+        if (content.length < MAGIC.length + 4) {
+            return null;
+        }
+
+        for (int i = content.length - MAGIC.length - 4; i >= 0; i--) {
+            if (matchesMagic(content, i)) {
+                int lenOffset = i + MAGIC.length;
+                int msgLen = ByteBuffer.wrap(content, lenOffset, 4).getInt();
+                int msgOffset = lenOffset + 4;
+                if (msgOffset + msgLen > content.length) {
+                    return null;
                 }
-            for (int x = 0; x < width; x++) {
-                if(i >= binaryArray.length){
-                    break;
-                }
-
-
-                int p = image.getRGB(x, y);
-
-                a = (p>>24) & 0xff;
-                r = (p>>16) & 0xff;
-                g = (p>>8) & 0xff;
-                b = p & 0xff;
-
-                r = r & 0xFE; // Set the least significant bit of red to 0
-                g = g & 0xFE; // Set the least significant bit of green to 0
-                b = b & 0xFE; // Set the least significant bit of blue to 0
-                
-                if(i < binaryArray.length){
-                r = r | binaryArray[i]; // Set the least significant bit of red to the corresponding bit from the binary array
-                ++i;
-                }
-
-                if(i < binaryArray.length){
-                g = g | binaryArray[i]; // Set the least significant bit of green to the corresponding bit from the binary array
-                ++i;
-                }
-
-                if(i < binaryArray.length){
-                b = b | binaryArray[i]; // Set the least significant bit of blue to the corresponding bit from the binary array
-                ++i;
-                }
-
-                p = (a<<24) | (r<<16) | (g<<8) | b;
-
-                image.setRGB(x, y, p);
-                System.out.println(i);
+                return new String(content, msgOffset, msgLen, StandardCharsets.UTF_8);
             }
         }
-        System.out.println("Message hidden in the image successfully."); 
-        System.out.println(i);  
 
-        Scanner S = new Scanner(System.in);
-        System.out.print("Enter the file path to save the modified image (e.g., output.png): ");
-        String outputPath = S.nextLine();
-        OutputStream outputStream = new OutputStream();
-        outputStream.writeFile(image, outputPath);
+        return null;
+    }
+
+    private static boolean matchesMagic(byte[] arr, int offset) {
+        if (offset + MAGIC.length > arr.length) return false;
+        for (int i = 0; i < MAGIC.length; i++) {
+            if (arr[offset + i] != MAGIC[i]) return false;
+        }
+        return true;
+    }
+
+    private static byte[] readAllBytes(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = fis.read(buffer)) != -1) {
+                baos.write(buffer, 0, read);
+            }
+            return baos.toByteArray();
+        }
     }
 }
