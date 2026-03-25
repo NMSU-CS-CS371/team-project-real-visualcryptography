@@ -52,7 +52,6 @@ public class BitChange {
     }
 
     private static boolean matchesMagic(byte[] arr, int offset) {
-<<<<<<< HEAD
         if (offset + MAGIC.length > arr.length) {
             return false;
         }
@@ -60,11 +59,6 @@ public class BitChange {
             if (arr[offset + i] != MAGIC[i]) {
                 return false;
             }
-=======
-        if (offset + MAGIC.length > arr.length) return false;
-        for (int i = 0; i < MAGIC.length; i++) {
-            if (arr[offset + i] != MAGIC[i]) return false;
->>>>>>> 896005da52a3ec375673786117ec2e96cd51faab
         }
         return true;
     }
