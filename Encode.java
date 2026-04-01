@@ -1,7 +1,7 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Scanner;
+import java.util.*;
 
 public class Encode {
     private File file = null;
@@ -24,6 +24,7 @@ public class Encode {
     }
 
     public void readFile(String filepath) {
+        BitChange bitChange = new BitChange();
         Scanner S = new Scanner(System.in);
         try {
             file = new File(filepath);
@@ -35,7 +36,7 @@ public class Encode {
             System.out.println("File loaded successfully: " + filepath);
             System.out.print("Enter the message to hide in the file: ");
             Message = S.nextLine();
-            File output = BitChange.encode(file, Message);
+            File output = bitChange.encode(file, Message);
             System.out.println("Message hidden successfully in new file: " + output.getAbsolutePath());
         } catch (IOException e) {
             System.err.println("Error processing file: " + e.getMessage());
