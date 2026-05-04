@@ -15,86 +15,20 @@ public class BitChange {
     private int b = 0;
     private int width = 0;
     private int height = 0;
-    private int i = 0;
+    private int i;
     private String charBinary = null; 
     private int[] messageBytes = null;
     private String outputPath = null;
 
     public File encode(File original, String message, Scanner S) throws IOException {
         BufferedImage image = ImageIO.read(original);
+        i = 0;
         if(image != null) { //Checks for null images
             int TestWidth = image.getWidth(null);
             if(TestWidth == -1){
         
             } else{
-            BufferedImage image2 = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB); //New image for ARGB
-            BufferedImage image3 = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB); //New image for RGB
-
-            if(original.getAbsolutePath().substring(original.getAbsolutePath().lastIndexOf('.')).equals(".jpg") || original.getAbsolutePath().substring(original.getAbsolutePath().lastIndexOf('.')).equals(".jpeg")){ //jpg or jpeg files only
-                Graphics2D g2d = image3.createGraphics(); //draws a new image to keep 24 bit depth
-
-                try {
-                    g2d.drawImage(image, 0, 0, null);
-                }finally {
-                    g2d.dispose();
-                }
-
-                messageBytes = Text2Binary(message); //turns message into binary
-
-                System.out.println(messageBytes.length);
-                width = image3.getWidth();
-                height = image3.getHeight();
-
-                //for loop for putting binary into the LSB(least significant bit)
-                for (int y = 0; y < height; y++) {
-                    if(i >= messageBytes.length){
-                            break;
-                        }
-                    for (int x = 0; x < width; x++) {
-                        if(i >= messageBytes.length){
-                            break;
-                        }
-
-                        int p = image3.getRGB(x, y);
-
-                        r = (p>>16) & 0xff;
-                        g = (p>>8) & 0xff;
-                        b = p & 0xff;
-
-                        r = r & 0xFE; // Set the LSB of red to 0
-                        g = g & 0xFE; // Set the LSB of green to 0
-                        b = b & 0xFE; // Set the LSB of blue to 0
-
-                        if(i < messageBytes.length){
-                        r = r | messageBytes[i]; // Set the LSB of red to the corresponding bit from the message bytes
-                        ++i;
-                        }
-
-                        if(i < messageBytes.length){
-                        g = g | messageBytes[i]; // Set the LSB of green to the corresponding bit from the message bytes
-                        ++i;
-                        }
-
-                        if(i < messageBytes.length){
-                        b = b | messageBytes[i]; // Set the LSB of blue to the corresponding bit from the message bytes
-                        ++i;
-                        }
-
-                        p = (r<<16) | (g<<8) | b;
-
-                        image3.setRGB(x, y, p);
-                    }
-                }
-                System.out.println("Message hidden in the image successfully."); 
-                System.out.println(i);  
-
-                System.out.print("Enter the new File name: ");
-                //Creates the new file path
-                outputPath = original.getAbsolutePath().substring(0, original.getAbsolutePath().lastIndexOf(File.separator) + 1) + S.nextLine() + original.getAbsolutePath().substring(original.getAbsolutePath().lastIndexOf('.'));
-                //Writes image to the new file path
-                ImageIO.write(image3, original.getAbsolutePath().substring(original.getAbsolutePath().lastIndexOf('.') + 1), new File(outputPath));
-                return new File(outputPath);
-            } else{
+                BufferedImage image2 = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB); //New image for ARGB
                 Graphics2D g2d = image2.createGraphics();
 
                 try {
@@ -160,7 +94,6 @@ public class BitChange {
                 return new File(outputPath);
                 }
             }
-        }
         //If the file is null this is returned
         return new File("nofile");
     }
